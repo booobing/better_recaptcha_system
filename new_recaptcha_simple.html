@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알고리즘 기반 인터랙티브 모자이크 (개선판)</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+        }
+        canvas {
+            border: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="interactive-mosaic" width="600" height="200"></canvas>
+
+<script>
+    const canvas = document.getElementById('interactive-mosaic');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const TEXT = "PASSWORD";
+    let textPixelMap = []; // 텍스트 영역의 픽셀 인덱스를 저장할 배열
+    let initialMosaicData; // 초기 정적 모자이크 데이터
+    
+    let mouse = { x: 0, y: 0, needsUpdate: true };
+
+    // 1. 텍스트 영역의 픽셀 맵 생성 (이전과 동일)
+    function createTextPixelMap() {
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const offCtx = offscreenCanvas.getContext('2d');
+
+        offCtx.fillStyle = 'black';
+        offCtx.fillRect(0, 0, width, height);
+
+        offCtx.font = 'bold 100px Arial';
+        offCtx.fillStyle = 'white';
+        offCtx.textAlign = 'center';
+        offCtx.textBaseline = 'middle';
+        offCtx.fillText(TEXT, width / 2, height / 2);
+
+        const imageData = offCtx.getImageData(0, 0, width, height).data;
+        for (let i = 0; i < imageData.length; i += 4) {
+            if (imageData[i] > 128) {
+                textPixelMap.push(i);
+            }
+        }
+    }
+
+    // 2. 초기 정적 모자이크 생성 (이전과 동일)
+    function createInitialMosaic() {
+        const imageData = ctx.createImageData(width, height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const val = Math.floor(Math.random() * 256);
+            data[i] = val;
+            data[i + 1] = val;
+            data[i + 2] = val;
+            data[i + 3] = 255;
+        }
+        initialMosaicData = imageData;
+    }
+
+    // 3. (개선됨) 2D 좌표 기반의 결정론적 난수(회색조) 생성 함수
+    function getDeterministicGray(mx, my, pixelIndex) {
+        // 1차원 인덱스에서 2차원 (x, y) 좌표를 계산합니다.
+        const x = (pixelIndex / 4) % width;
+        const y = Math.floor((pixelIndex / 4) / width);
+
+        // 마우스 좌표와 픽셀 좌표를 조합합니다.
+        // 이 값들을 sin 함수와 큰 숫자에 곱해 결과를 예측 불가능하게 만듭니다.
+        // 이 숫자들을 바꾸면 모자이크의 패턴이 달라집니다.
+        const magicNumber1 = 12.9898;
+        const magicNumber2 = 78.233;
+        const magicNumber3 = 43758.5453;
+
+        let seed = Math.sin(
+            (x + mx) * magicNumber1 + (y + my) * magicNumber2
+        ) * magicNumber3;
+        
+        // sin 결과값에서 소수 부분만 추출하여 0과 1 사이의 값으로 만듭니다.
+        const randomVal = seed - Math.floor(seed);
+        
+        return Math.floor(randomVal * 256);
+    }
+    
+    // 4. 캔버스 그리기 함수
+    function draw() {
+        const currentFrame = new ImageData(
+            new Uint8ClampedArray(initialMosaicData.data),
+            width,
+            height
+        );
+        const data = currentFrame.data;
+
+        for (const i of textPixelMap) {
+            const gray = getDeterministicGray(mouse.x, mouse.y, i);
+            data[i] = gray;
+            data[i + 1] = gray;
+            data[i + 2] = gray;
+        }
+
+        ctx.putImageData(currentFrame, 0, 0);
+    }
+
+    // 마우스 움직임 이벤트 핸들러
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+        mouse.needsUpdate = true; // 마우스가 움직였음을 표시
+    });
+
+    // 애니메이션 루프
+    function animate() {
+        // 마우스가 움직였을 때만 캔버스를 다시 그립니다. (성능 최적화)
+        if (mouse.needsUpdate) {
+            draw();
+            mouse.needsUpdate = false;
+        }
+        requestAnimationFrame(animate);
+    }
+
+    // 초기화 및 실행
+    createTextPixelMap();
+    createInitialMosaic();
+    // 초기 렌더링을 위해 draw()를 한번 호출
+    draw(); 
+    animate();
+
+</script>
+</body>
+</html>
