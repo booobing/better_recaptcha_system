@@ -35,7 +35,7 @@
     -   숨겨진 `TEXT`를 쉽게 변경할 수 있습니다.
     -   텍스트의 `lineWidth`를 조절하여 더 두껍거나 얇게 만들 수 있습니다.
     -   `pixelSize`를 조절하여 더 크거나 작은 모자이크 블록을 생성할 수 있습니다.
--   **조정 가능한 공명 효과:** `textSpeed`, `backgroundSpeed`, `globalSpeed` 등의 값을 미세 조정하여 인간에게는 잘 보이고 봇에게는 더 어려운 최적의 균형점을 찾을 수 있습니다.
+-   **조정 가능한 공명 효과:** `const_time`값을 미세 조정하여 인간에게는 잘 보이고 봇에게는 더 어려운 최적의 균형점을 찾을 수 있습니다.
 
 ### 사용법 및 커스터마이징
 
@@ -83,7 +83,7 @@ A human can perceive the hidden word not by analyzing a single frame, but by rec
 
 1.  **Algorithmic Noise:** The entire canvas is filled with mosaic blocks. The color of each block is not random, but is calculated in real-time by a deterministic noise function. This function takes the block's coordinates, the mouse position, and a constantly increasing `time` variable as inputs.
 
-2.  **Sympathetic Resonance (공명 변상):** This is the key to the system.
+2.  **Sympathetic Resonance:** This is the key to the system.
     *   An invisible text mask defines two zones: the "text area" and the "background area".
     *   Both zones use the **exact same noise algorithm**.
     *   However, the `time` variable fed into the algorithm is multiplied by a different speed factor for each zone (`textSpeed` vs. `backgroundSpeed`).
@@ -99,7 +99,7 @@ A human can perceive the hidden word not by analyzing a single frame, but by rec
     -   Easily change the hidden `TEXT`.
     -   Adjust text `lineWidth` to make it thicker or thinner.
     -   Control the `pixelSize` to create larger or smaller mosaic blocks.
--   **Tunable Resonance Effect:** Fine-tune `textSpeed`, `backgroundSpeed`, and `globalSpeed` to find the optimal balance between visibility for humans and difficulty for bots.
+-   **Tunable Resonance Effect:** Fine-tune `const_time` to find the optimal balance between visibility for humans and difficulty for bots.
 
 ### Usage and Customization
 
