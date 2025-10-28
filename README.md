@@ -3,7 +3,7 @@
 이 프로젝트는 OCR과 AI 분석에 점점 더 취약해지는 정적인 CAPTCHA 시스템을 넘어선, 새로운 방식의 인간 인증 시스템 컨셉을 탐구합니다. 이 시스템은 정적인 이미지를 제시하는 대신, **움직임 속도의 차이로 발생하는 '공명 현상(Sympathetic Resonance)'**을 통해서만 숨겨진 텍스트를 인지할 수 있는 완전한 동적/상호작용형 모자이크를 생성합니다.
 
 ![Live Demo GIF](mosaic_example.gif)
-*( 이 곳에 프로젝트의 실제 동작 GIF를 추가하는 것을 강력히 권장합니다. )*
+
 
 ### 기존 CAPTCHA 시스템의 문제점
 
@@ -67,7 +67,7 @@
 This project explores a novel approach to human verification, moving beyond static CAPTCHAs that are increasingly vulnerable to OCR and AI analysis. Instead of presenting a static image, this system generates a fully dynamic and interactive mosaic where the hidden text is only perceptible through the phenomenon of **sympathetic resonance**, a visual effect created by differential motion speeds.
 
 ![Live Demo GIF](mosaic_example.gif)
-*( 여기에 프로젝트의 실제 동작 GIF를 추가하는 것을 강력히 권장합니다. )*
+
 
 ### The Problem with Modern CAPTCHAs
 
