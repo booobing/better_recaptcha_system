@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블록 모자이크 효과</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+        }
+        canvas {
+            border: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="interactive-mosaic" width="600" height="150"></canvas>
+
+<script>
+    const canvas = document.getElementById('interactive-mosaic');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const width = canvas.width;
+    const height = canvas.height;
+
+    const TEXT = "PASSWORD";
+    let textPixelSet;
+
+    let time = 0;
+    const const_time = 0.00001;
+    const textSpeed = 1/const_time;
+    const backgroundSpeed = const_time*1000;
+    
+    // 변경점 1: 모자이크 한 칸의 크기를 정의합니다. 이 값을 조절하세요.
+    const pixelSize = 1; // 5x5 크기의 모자이크 블록
+
+    let mouse = { x: 0, y: 0 };
+
+    function createTextPixelMap() {
+        const offscreenCanvas = document.createElement('canvas');
+        const offCtx = offscreenCanvas.getContext('2d');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+
+        offCtx.fillStyle = 'black';
+        offCtx.fillRect(0, 0, width, height);
+        offCtx.font = 'bold 100px Arial';
+        offCtx.fillStyle = 'white';
+        offCtx.textAlign = 'center';
+        offCtx.textBaseline = 'middle';
+
+        offCtx.strokeStyle = 'white';
+        offCtx.lineWidth = 5;
+        offCtx.strokeText(TEXT, width / 2, height / 2);
+        offCtx.fillText(TEXT, width / 2, height / 2);
+
+        const imageData = offCtx.getImageData(0, 0, width, height).data;
+        const pixelMap = new Set();
+        for (let i = 0; i < imageData.length; i += 4) {
+            if (imageData[i] > 128) {
+                pixelMap.add(i);
+            }
+        }
+        textPixelSet = pixelMap;
+    }
+
+    function getDeterministicGray(mx, my, pixelIndex, timeValue) {
+        const x = (pixelIndex / 4) % width;
+        const y = Math.floor((pixelIndex / 4) / width);
+        const magicNumber1 = 12.9898;
+        const magicNumber2 = 78.233;
+        const magicNumber3 = 43758.5453;
+
+        let seed = Math.sin(
+            (x + mx) * magicNumber1 + (y + my + timeValue) * magicNumber2
+        ) * magicNumber3;
+        
+        const randomVal = seed - Math.floor(seed);
+        return Math.floor(randomVal * 256);
+    }
+    
+    // 변경점 2: draw 함수를 블록 단위로 계산하도록 전면 수정
+    function draw() {
+        const currentFrame = ctx.createImageData(width, height);
+        const data = currentFrame.data;
+
+        // 캔버스를 'pixelSize' 크기의 블록 단위로 순회
+        for (let y = 0; y < height; y += pixelSize) {
+            for (let x = 0; x < width; x += pixelSize) {
+                
+                // 블록의 색상을 결정하기 위해 대표 픽셀(좌측 상단)의 인덱스를 사용
+                const representativeIndex = (y * width + x) * 4;
+                
+                let gray;
+                // 대표 픽셀이 텍스트 영역에 속하는지에 따라 속도를 다르게 적용
+                if (textPixelSet.has(representativeIndex)) {
+                    gray = getDeterministicGray(mouse.x, mouse.y, representativeIndex, time * textSpeed);
+                } else {
+                    gray = getDeterministicGray(mouse.x, mouse.y, representativeIndex, time * backgroundSpeed);
+                }
+
+                // 현재 블록(pixelSize x pixelSize)의 모든 픽셀을 계산된 'gray' 값으로 채움
+                for (let subY = 0; subY < pixelSize; subY++) {
+                    for (let subX = 0; subX < pixelSize; subX++) {
+                        const currentY = y + subY;
+                        const currentX = x + subX;
+
+                        // 캔버스 경계를 벗어나지 않도록 확인
+                        if (currentX < width && currentY < height) {
+                            const targetIndex = (currentY * width + currentX) * 4;
+                            data[targetIndex] = gray;     // R
+                            data[targetIndex + 1] = gray; // G
+                            data[targetIndex + 2] = gray; // B
+                            data[targetIndex + 3] = 205;  // A
+                        }
+                    }
+                }
+            }
+        }
+        ctx.putImageData(currentFrame, 0, 0);
+    }
+
+    //canvas.addEventListener('mousemove', (e) => {
+    //    const rect = canvas.getBoundingClientRect();
+    //    mouse.x = e.clientX - rect.left;
+    //    mouse.y = e.clientY - rect.top;
+    //});
+
+    function animate() {
+        time += const_time;
+        draw();
+        requestAnimationFrame(animate);
+    }
+
+    createTextPixelMap();
+    animate();
+
+</script>
+</body>
+</html>
